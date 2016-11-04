@@ -6,6 +6,11 @@ webpack打包运用 + es6运用
 #运行
 webpack
 
+webpack监听--》webpack-dev-server回车
+
+--------------------
+
+
 ##gulp+webpack
 
 运行  gulp
