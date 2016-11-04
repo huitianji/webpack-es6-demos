@@ -142,6 +142,12 @@ module.exports = {
 require("!style!css!less!./file.less");
 
 
+///---3
+***　　npm install webpack-dev-server -g
+
+webpack-dev-server  回车
+
+
 
 【**gulp:--**】
 var gulp = require('gulp');
