@@ -1,0 +1,165 @@
+【准备工作】：
+      清除npm cache
+      sudo npm cache clean -f
+
+【安装模块】:
+    <1>
+        npm install webpack -g
+        npm intall webpack --save-dev
+
+    <2>
+        npm install css-loader style-loader --save-dev
+    <5>
+        {-----【加载图片】----
+        url-loader 会将样式中引用到的图片转为模块来处理
+       }
+
+        npm install url-loader --save-dev
+    <7>
+        npm install expose-loader --save-dev
+    <8>
+        npm install babel-core --save-dev
+        npm install babel-loader --save-dev
+        npm install babel-preset-es2015  --save-dev
+    <10>
+        npm install gulp --save-dev
+
+【第一：简单运用】
+    webpack -w 提供watch方法 ，实时进行打包更新
+    webpack -p 对打包后的文件进行压缩
+    webpack -d 提供 sourcemap 方便调试
+    webpack --config 以某个config 作为打包
+    webpack --help 更多命令
+
+
+    编译 entry.js并打包到 bundle.js
+        webpack ./entry.js bundle.js
+
+【解释运用1】：
+    【***】------【expose -****-】-----很常用  //就是可以使用jquery
+        如果想在前台使用打包的jquery需要把jquery暴露出来
+    ***   npm install expose-loader --save-dev
+        把$作为别名为jquery的变量暴露到全局上下文中
+        require('expose?$!jquery');
+
+【解释运用2】：
+    ------【使用es6】----
+    *** npm install babel-core --save-dev
+    *** npm install babel-loader --save-dev
+    *** npm install babel-preset-es2015
+    {test:/\.js?$/,loader:'babel-loader',exclude:/node_modules/,query:{compact:false,presets:['es2015']}}
+
+【解释运用3】：
+    ---【打包成多个资源文件】----
+    entry属性可以是一个对象，而对象名也就是key会作为下面output的filename属性的[name]
+
+    【***】-----------【公共模块-插件】--------
+    我们利用插件就可以智能提前公共部分，以提供我们浏览器的缓存复用
+    plugins:[
+        new webpack.optimize.CommonsChunkPlugin('common.js')
+    ]
+    "我们需要手动在html上去加载common.js,并且是必须要最先加载"
+
+    ------【别名】----
+    别名的作用是把用户的一个请求重定向到另一个路径
+    resolve:{
+        alias:{
+            jquery:'./js/jquery.js'
+        }
+    }
+    require('./lib/jquery/jquery.js');//正常来这么写。。比较长。可以整个别名
+    require("jquery");
+    ------【插件】-------
+    插件的使用一般是在webpack的配置信息plugins选项中指定 我们可以
+        向生成的打包文件头部插入一些信息
+
+    var webpack = require("webpack");
+    plugins:[
+        new webpack.BannerPlugin('This file is create by mutouren')
+    ]
+
+
+【--、###、--】
+    css-loader(进行转换)  style-loader(插入到html中去)
+    require("!style!css!./style.css");
+
+
+////---1
+
+    var webpack = require("webpack");
+    module.exports = {
+        //entry:'./entry.js', //定义打包的入口文件，每一个键值对，就是一个入口文件 可以是一个数组['./entry.js','./entry2.js']
+        entry:{
+            bundle1:"./entry1.js",
+            bundle2:"./entry2.js"
+        },
+        output:{    //配置打包结果
+            path:__dirname,     //定义了输出的文件夹--当前目录下
+            //filename:'bundle.js'   //定义了打包结果文件的名称
+            filename:"[name].js"
+        },
+        module:{    //定义模块的加载逻辑
+            loaders:[   //定义了一系列的加载器
+                {test:/\.css$/,loader:'style!css'}//当需要加载的文件匹配'test'正则时。就会调用后面的`loadder`对文件进行加载
+                ,
+                {test:/\.(png|jpg)$/,loader:'url?limit = 4000'}//4000 == 4k 如果大小小于4k 转换成base64引入到页面里面去
+                ,
+                {test:/\.js?$/,loader:'babel',exclude: /node_modules/, query: {compact: false,presets:['es2015']}}
+            ]
+        }
+        ,
+        plugins:[
+                new webpack.BannerPlugin('//jht') ,  //前缀
+                new webpack.optimize.CommonsChunkPlugin('common.js')//通用的js
+        ]
+        ,
+        resolve:{//别名
+            alias:{
+                jquery:"./lib/jquery/jquery.js"
+            }
+        }
+    }
+
+
+
+
+///---2
+
+npm install less-loader --save-dev
+
+module.exports = {
+  module: {
+    loaders: [
+      {
+        test: /\.less$/,
+        loader: "style!css!less"
+      }
+    ]
+  }
+};
+
+运用
+require("!style!css!less!./file.less");
+
+
+
+【**gulp:--**】
+var gulp = require('gulp');
+/*var gutil = require("gulp-util");*/
+var webpack = require('webpack');
+var webpackConfig = require('./webpack.config.js');
+gulp.task('webpack',function(callback){
+    var myConfig = Object.create(webpackConfig);
+    webpack(
+        myConfig,
+        function(err,stats){
+            callback();
+        }
+    )
+});
+gulp.task('default',function(){
+    gulp.watch(['./**','!./node_modules/**'],['webpack'],function(){
+        console.log("ok--");
+    });
+
+});
